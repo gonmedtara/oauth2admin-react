@@ -1,0 +1,9 @@
+{
+  "repository": "react oauth2admin widget",
+  "description": "CRUD oauth2 server clients",
+  "author": "alagodich",
+  "license": "MIT",
+  "dependencies": {
+    "react": "*"
+  }
+}
