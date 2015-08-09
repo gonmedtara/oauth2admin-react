@@ -4,11 +4,15 @@
  * -ClientsCRUD
  *   -SearchBar
  *   -ClientList
+ *   -ClientForm
  *     -Client
  *       -ClientActions
  *          -ClientUpdate
  *          -ClientDelete
- *       -ClientDetails (Modal)
+ *       -ClientDetails
+ *           -TokenCRUD
+ *               -TokenList
+ *                   -Token
  */
 
 var ClientsCRUD = React.createClass({
@@ -241,7 +245,7 @@ var ClientActions = React.createClass({
 
 var ClientDetails = React.createClass({
     componentDidMount: function() {
-        $(React.findDOMNode(this.refs.modal)).modal({
+        $(React.findDgOMNode(this.refs.modal)).modal({
             // transition: 'vertical flip',
             autofocus: true,
             // closable: false,
