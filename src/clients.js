@@ -35,7 +35,7 @@ var ClientsCRUD = React.createClass({
             }.bind(this),
             error: function(xhr, status, error) {
                 console.log(xhr, status, error);
-            }.bind(this)
+            }
         });
     },
     handleNew: function(data) {
@@ -49,7 +49,7 @@ var ClientsCRUD = React.createClass({
             }.bind(this),
             error: function(xhr, status, error) {
                 console.log(xhr, status, error);
-            }.bind(this)
+            }
         });
     },
     handleUpdate: function(data) {
@@ -63,7 +63,7 @@ var ClientsCRUD = React.createClass({
             }.bind(this),
             error: function(xhr, status, error) {
                 console.log(xhr, status, error);
-            }.bind(this)
+            }
         });
     },
     handleDelete: function(client_id) {
@@ -76,7 +76,7 @@ var ClientsCRUD = React.createClass({
             }.bind(this),
             error: function(xhr, status, error) {
                 console.log(xhr, status, error);
-            }.bind(this),
+            }
         });
     },
     toggleNewClientForm: function() {
@@ -106,6 +106,7 @@ var ClientsCRUD = React.createClass({
                     filterText={this.state.filterText}
                     onUpdate={this.handleUpdate}
                     onDelete={this.handleDelete}
+                    url={this.props.url}
                 />
                 <button className="ui right primary button" onClick={this.toggleNewClientForm}>Create</button>
             </div>
@@ -149,6 +150,7 @@ var ClientList = React.createClass({
                 data={client}
                 onUpdate={this.props.onUpdate}
                 onDelete={this.props.onDelete}
+                url={this.props.url}
             />);
         }.bind(this));
         return (
@@ -195,7 +197,12 @@ var Client = React.createClass({
                     <i className="spy icon"></i>
                     <span>{data.client_id}</span>
                 </div>
-                <ClientDetails data={data} open={this.state.detailsOpen} handler={this.toggleDetails} />
+                <ClientDetails
+                    data={data}
+                    open={this.state.detailsOpen}
+                    handler={this.toggleDetails}
+                    url={this.props.url}
+                />
             </div>
         );
     }
@@ -236,6 +243,9 @@ var ClientDetails = React.createClass({
     componentDidMount: function() {
         $(React.findDOMNode(this.refs.modal)).modal({
             // transition: 'vertical flip',
+            autofocus: true,
+            // closable: false,
+            duration: 100,
             detachable: false,
             onHide: function() {
                 this.props.handler();
@@ -250,14 +260,22 @@ var ClientDetails = React.createClass({
     render: function() {
         var data = this.props.data;
         return (
-            <div className='clientDetails ui small modal' ref="modal">
+            <div className='clientDetails ui modal' ref="modal">
+                <div className="header">
+                    <h3>Client details</h3>
+                </div>
                 <div className="content">
-                    <div className="description ui list">
-                        <div className="item">Id: <strong>{data.client_id}</strong></div>
-                        <div className="item">secret: <strong>{data.client_secret}</strong></div>
-                        <div className="item">redirect uri: <strong>{data.redirect_uri}</strong></div>
-                        <div className="item">grant types: <strong>{data.grant_types}</strong></div>
-                        <div className="item">scope: <strong>{data.scope}</strong></div>
+                    <div className="ui grid">
+                        <div className="four wide column ui list">
+                            <div className="item">Id: <strong>{data.client_id}</strong></div>
+                            <div className="item">secret: <strong>{data.client_secret}</strong></div>
+                            <div className="item">redirect uri: <strong>{data.redirect_uri}</strong></div>
+                            <div className="item">grant types: <strong>{data.grant_types}</strong></div>
+                            <div className="item">scope: <strong>{data.scope}</strong></div>
+                        </div>
+                        <div className="twelve wide column">
+                            <TokenCRUD client_id={data.client_id} url={this.props.url}/>
+                        </div>
                     </div>
                 </div>
                 <div className="actions">
@@ -297,7 +315,9 @@ var ClientNew = React.createClass({
 var ClientForm = React.createClass({
     componentDidMount: function() {
         $(React.findDOMNode(this.refs.modal)).modal({
-            // transition: 'vertical flip',
+            autofocus: true,
+            closable: false,
+            duration: 100,
             detachable: false,
             onHide: function() {
                 this.props.handler();
@@ -408,5 +428,115 @@ var ClientDelete = React.createClass({
         );
     }
 });
+
+var TokenCRUD = React.createClass({
+    getInitialState: function() {
+        return {tokens: []};
+    },
+    componentDidMount: function() {
+        this.loadTokens();
+    },
+    loadTokens: function() {
+        $.ajax({
+            url: this.props.url + '/' + this.props.client_id + '/tokens',
+            dataType: 'json',
+            type: 'get',
+            success: function(data) {
+                this.setState({tokens: data});
+            }.bind(this),
+            error: function(xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+        });
+    },
+    handleDelete: function(access_token) {
+        $.ajax({
+            url: this.props.url + '/tokens/' + access_token,
+            dataType: 'json',
+            type: 'delete',
+            success: function() {
+                this.loadTokens();
+            }.bind(this),
+            error: function(xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+        });
+    },
+    handleAdd: function() {
+        $.ajax({
+            url: this.props.url + '/' + this.props.client_id + '/tokens',
+            dataType: 'json',
+            type: 'post',
+            success: function(data) {
+                this.loadTokens();
+            }.bind(this),
+            error: function(xhr, status, error) {
+                console.log(xhr, status, error);
+            }
+        });
+    },
+    render: function() {
+        return (
+            <div className="tokenCRUD">
+                <div className="header">
+                    Tokens:
+                </div>
+                <TokenList tokens={this.state.tokens} onDelete={this.handleDelete} onAdd={this.handleAdd}/>
+            </div>
+        );
+    }
+});
+
+var TokenList = React.createClass({
+    render: function() {
+        var items = [];
+        this.props.tokens.forEach(function(token) {
+            items.push(<Token data={token} onDelete={this.props.onDelete} key={token.access_token}/>);
+        }.bind(this));
+        return (
+            <table className="ui very basic celled compact single line table">
+                <thead>
+                    <tr>
+                        <th>access token</th>
+                        <th>user id</th>
+                        <th>expires</th>
+                        <th>scope</th>
+                        <th>action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {items}
+                </tbody>
+                <tfoot>
+                    <tr className="tokenForm">
+                        <td colSpan="5">
+                            <div className="ui small green button" onClick={this.props.onAdd}>Add</div>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        );
+    }
+});
+
+var Token = React.createClass({
+    handleDelete: function() {
+        if (confirm('Are you sure you want to delete this token?')) {
+            this.props.onDelete(this.props.data.access_token);
+        }
+    },
+    render: function() {
+        return (
+            <tr className="token">
+                <td>{this.props.data.access_token}</td>
+                <td>{this.props.data.user_id}</td>
+                <td>{this.props.data.expires}</td>
+                <td>{this.props.data.scope}</td>
+                <td><i className="ban red icon" onClick={this.handleDelete}></i></td>
+            </tr>
+        );
+    }
+});
+
 
 React.render(<ClientsCRUD url="/oauth2-admin/clients"/>, document.getElementById('clientsContainer'));
