@@ -245,7 +245,7 @@ var ClientActions = React.createClass({
 
 var ClientDetails = React.createClass({
     componentDidMount: function() {
-        $(React.findDgOMNode(this.refs.modal)).modal({
+        $(React.findDOMNode(this.refs.modal)).modal({
             // transition: 'vertical flip',
             autofocus: true,
             // closable: false,
